@@ -6,7 +6,24 @@ from six.moves import input
 from six.moves.urllib import parse
 from v1pysdk import V1Meta
 
-from .exceptions import ConfigurationError
+from .exceptions import (
+    ConfigurationError,
+    NotFound,
+)
+
+
+VERSIONONE_TYPES = {
+    'Story': {
+        'jira_issue': 'Custom_JIRATicketNumber',
+        'code_review_url': 'Custom_UserStoryCodeReview',
+        'description': 'Description',
+    },
+    'Defect': {
+        'jira_issue': 'Custom_JiraTicketNumber',
+        'code_review_url': 'Custom_DefectCodeReview',
+        'description': 'Description',
+    }
+}
 
 
 logger = logging.getLogger(__name__)
@@ -120,3 +137,28 @@ def get_jira_issue_for_v1_issue(
     versionone_issue, jira_connection, default_project
 ):
     pass
+
+
+def get_versionone_story_by_name(connection, story_number):
+    for type_name, field_data in VERSIONONE_TYPES.items():
+        answers = list(
+            getattr(connection, type_name).select(
+                *field_data.values()
+            ).where(
+                Number=story_number
+            )
+        )
+        if answers:
+            return answers[0]
+
+    raise NotFound('No story found matching %s' % story_number)
+
+
+def get_standardized_versionone_data_for_story(story):
+    fields = VERSIONONE_TYPES[story.__class__.__name__]
+    data = {}
+
+    for standard, custom in fields.items():
+        data[standard] = getattr(story, custom, None)
+
+    return standard

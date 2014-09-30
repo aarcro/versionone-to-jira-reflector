@@ -9,7 +9,6 @@ from .main import (
     get_jira_connection,
     get_versionone_story_by_name,
 )
-from .reflector import Reflector
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +50,11 @@ def main():
 
     v1_connection = get_versionone_connection(config)
     jira_connection = get_jira_connection(config)
+
+    for story_number in args.versionone_ids:
+        story = get_versionone_story_by_name(v1_connection, story_number)
+        import ipdb
+        ipdb.set_trace()
 
     # If any configuration values were changed, let's save them
     config.write()
