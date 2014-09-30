@@ -16,6 +16,8 @@ from .exceptions import (
 from .util import response_was_yes
 
 
+# TODO: The JIRA Issue and Code Review fields are CMG-specific here;
+# although that's ~safe, this could be better.
 VERSIONONE_TYPES = {
     'Story': {
         'static': {
