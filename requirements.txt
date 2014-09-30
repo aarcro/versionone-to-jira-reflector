@@ -1,0 +1,2 @@
+six
+configobj>=5.0.6
