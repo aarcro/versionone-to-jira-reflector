@@ -1,2 +1,5 @@
 six
 configobj>=5.0.6
+argparse>=1.2.1
+v1pysdk-unofficial>=0.4
+jira>=0.32
