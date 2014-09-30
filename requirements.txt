@@ -4,3 +4,4 @@ argparse>=1.2.1
 v1pysdk-unofficial>=0.4
 jira>=0.32
 keyring>=4.0
+html2text>=2014.9.25

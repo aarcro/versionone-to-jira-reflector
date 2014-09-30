@@ -7,7 +7,9 @@ from configobj import ConfigObj
 from .main import (
     get_versionone_connection,
     get_jira_connection,
+    get_jira_issue_for_v1_issue,
     get_versionone_story_by_name,
+    update_jira_ticket_with_versionone_data
 )
 
 
@@ -53,8 +55,14 @@ def main():
 
     for story_number in args.versionone_ids:
         story = get_versionone_story_by_name(v1_connection, story_number)
-        import ipdb
-        ipdb.set_trace()
+        ticket = get_jira_issue_for_v1_issue(jira_connection, story)
+
+        update_jira_ticket_with_versionone_data(
+            jira_connection,
+            ticket,
+            story,
+            config
+        )
 
     # If any configuration values were changed, let's save them
     config.write()
