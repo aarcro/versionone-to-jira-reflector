@@ -2,6 +2,7 @@ import getpass
 import logging
 
 from jira.client import JIRA
+import keyring
 from six.moves import input
 from six.moves.urllib import parse
 from v1pysdk import V1Meta
@@ -10,6 +11,7 @@ from .exceptions import (
     ConfigurationError,
     NotFound,
 )
+from .util import response_was_yes
 
 
 VERSIONONE_TYPES = {
@@ -48,13 +50,25 @@ def get_versionone_connection(config):
             '(ex: http://www.v1host.com/MyInstance100/): '
         )
 
-    password = getpass.getpass('VersionOne Password: ')
-
     if not settings_saved:
         save = input('Save VersionOne username and instance URL? (N/y): ')
-        if save.upper() and save.upper()[0] == 'Y':
+        if response_was_yes(save):
             config['versionone']['username'] = username
             config['versionone']['instance_url'] = url
+
+    password = keyring.get_password(
+        'versionone_to_jira_reflector',
+        'versionone',
+    )
+    if not password:
+        password = getpass.getpass('VersionOne Password: ')
+        save = input('Save VersionOne password to system keychain? (N/y): ')
+        if response_was_yes(save):
+            keyring.set_password(
+                'versionone_to_jira_reflector',
+                'versionone',
+                password,
+            )
 
     parsed_address = parse.urlparse(url)
     address = parsed_address.netloc
@@ -110,14 +124,26 @@ def get_jira_connection(config):
             'Default JIRA project for new issues: '
         )
 
-    password = getpass.getpass('JIRA Password: ')
-
     if not settings_saved:
         save = input('Save JIRA username, domain, and project? (N/y): ')
-        if save.upper() and save.upper()[0] == 'Y':
+        if response_was_yes(save):
             config['jira']['username'] = username
             config['jira']['domain'] = domain
             config['jira']['project'] = project
+
+    password = keyring.get_password(
+        'versionone_to_jira_reflector',
+        'jira',
+    )
+    if not password:
+        password = getpass.getpass('JIRA Password: ')
+        save = input('Save JIRA password to system keychain? (N/y): ')
+        if response_was_yes(save):
+            keyring.set_password(
+                'versionone_to_jira_reflector',
+                'jira',
+                password
+            )
 
     logger.debug(
         'Connecting to JIRA with the following params: ',
