@@ -134,7 +134,7 @@ def get_jira_connection(config):
         settings_saved = False
         domain = input(
             'JIRA Domain '
-            '(ex: http://jira.mycompany.com/): '
+            '(ex: https://jira.mycompany.com/): '
         )
 
     project = config['jira'].get('project')
