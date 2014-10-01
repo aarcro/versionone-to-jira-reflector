@@ -173,7 +173,7 @@ def get_jira_connection(config):
             )
 
     logger.debug(
-        'Connecting to JIRA with the following params: ',
+        'Connecting to JIRA with the following params: '
         'Domain: %s, Project: %s, Username: %s',
         domain,
         project,
@@ -226,8 +226,12 @@ def get_versionone_story_by_name(connection, story_number):
     raise NotFound('No story found matching %s' % story_number)
 
 
+def get_metadata_for_story_type(story):
+    return VERSIONONE_TYPES[story.__class__.__name__]
+
+
 def get_standardized_versionone_data_for_story(story):
-    type_data = VERSIONONE_TYPES[story.__class__.__name__]
+    type_data = get_metadata_for_story_type(story)
     data = {}
 
     for standard, custom in type_data['fields'].items():
@@ -238,7 +242,7 @@ def get_standardized_versionone_data_for_story(story):
     return data
 
 
-def update_jira_ticket_with_versionone_data(jira, ticket, story, config):
+def update_jira_ticket_with_versionone_data(jira, v1, ticket, story, config):
     standardized = get_standardized_versionone_data_for_story(story)
 
     params = {
@@ -265,10 +269,6 @@ def update_jira_ticket_with_versionone_data(jira, ticket, story, config):
         ticket = jira.create_issue(**params)
         logger.debug('Created issue %s', ticket)
 
-    logger.info(
-        'Issue saved: See %s for results.', ticket.permalink()
-    )
-
     # Custom fields cannot be set on create!
     code_review_field_name = get_jira_code_review_field_name(jira)
     if code_review_field_name:
@@ -277,6 +277,18 @@ def update_jira_ticket_with_versionone_data(jira, ticket, story, config):
                 code_review_field_name: standardized['code_review_url']
             }
         )
+
+    type_metadata = get_metadata_for_story_type(story)
+    setattr(
+        story,
+        type_metadata['fields']['jira_issue'],
+        ticket.key,
+    )
+    v1.commit()
+
+    logger.info(
+        'Issue saved: See %s for results.', ticket.permalink()
+    )
 
     webbrowser.open(
         ticket.permalink()

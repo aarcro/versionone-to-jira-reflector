@@ -59,6 +59,7 @@ def main():
 
         update_jira_ticket_with_versionone_data(
             jira_connection,
+            v1_connection,
             ticket,
             story,
             config
