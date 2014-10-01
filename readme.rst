@@ -43,5 +43,5 @@ Caveat Emptor
 
 Although this is a totally workable solution, this was mostly a quick
 hack to solve a temporary need, and it isn't exactly code that I'm
-proud of.  If you end up using this tool, feel free to submit a pull
-request to clean things up that you think could easily be better.
+proud of.  If you end up using this tool, feel free to fork this
+code and clean things up to your liking.
