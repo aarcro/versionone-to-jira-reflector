@@ -16,52 +16,48 @@ from .exceptions import (
 from .util import response_was_yes
 
 
-# TODO: The JIRA Issue and Code Review fields are CMG-specific here;
-# although that's ~safe, this could be better.
-VERSIONONE_TYPES = {
-    'Story': {
-        'static': {
-            'issue_type': 'Story'
-        },
-        'fields': {
-            'name': 'Name',
-            'number': 'Number',
-            'jira_issue': 'Custom_JIRATicketNumber',
-            'code_review_url': 'Custom_UserStoryCodeReview',
-            'description': 'Description',
-        }
+DEFAULT_SETTINGS = {
+    'versionone': {
+        'story_types': 'Story,Defect',
     },
-    'Defect': {
-        'static': {
-            'issue_type': 'Bug',
-        },
-        'fields': {
-            'name': 'Name',
-            'number': 'Number',
-            'jira_issue': 'Custom_JiraTicketNumber',
-            'code_review_url': 'Custom_DefectCodeReview',
-            'description': 'Description',
-        }
-    }
-}
-
-
-DEFAULT_VERSIONONE_SETTINGS = {
-}
-
-
-DEFAULT_JIRA_SETTINGS = {
-    'code_review_field_label': 'Code Review Url',
+    'versionone_Story_fields': {
+        'name': 'Name',
+        'number': 'Number',
+        'jira_issue': 'Custom_JIRATicketNumber',
+        'code_review_url': 'Custom_UserStoryCodeReview',
+        'description': 'Description',
+    },
+    'versionone_Story_static': {
+        'issue_type': 'Story'
+    },
+    'versionone_Defect_fields': {
+        'name': 'Name',
+        'number': 'Number',
+        'jira_issue': 'Custom_JiraTicketNumber',
+        'code_review_url': 'Custom_DefectCodeReview',
+        'description': 'Description',
+    },
+    'versionone_Defect_static': {
+        'issue_type': 'Bug',
+    },
+    'jira': {
+        'code_review_field_label': 'Code Review Url',
+    },
 }
 
 
 logger = logging.getLogger(__name__)
 
 
-def get_versionone_connection(config):
-    if 'versionone' not in config:
-        config['versionone'] = DEFAULT_VERSIONONE_SETTINGS
+def ensure_default_settings(config):
+    for setting_key, values in DEFAULT_SETTINGS.items():
+        if setting_key not in config:
+            config[setting_key] = values
 
+    return config
+
+
+def get_versionone_connection(config):
     settings_saved = True
 
     username = config['versionone'].get('username')
@@ -126,9 +122,6 @@ def get_versionone_connection(config):
 
 
 def get_jira_connection(config):
-    if 'jira' not in config:
-        config['jira'] = DEFAULT_JIRA_SETTINGS
-
     settings_saved = True
 
     username = config['jira'].get('username')
@@ -186,8 +179,8 @@ def get_jira_connection(config):
     )
 
 
-def get_jira_code_review_field_name(jira_connection):
-    label = DEFAULT_JIRA_SETTINGS['code_review_field_label']
+def get_jira_code_review_field_name(jira_connection, config):
+    label = config['jira']['code_review_field_label']
     matching_fields = [
         f['id']
         for f in jira_connection.fields()
@@ -198,10 +191,8 @@ def get_jira_code_review_field_name(jira_connection):
     return None
 
 
-def get_jira_issue_for_v1_issue(
-    jira_connection, story
-):
-    standardized = get_standardized_versionone_data_for_story(story)
+def get_jira_issue_for_v1_issue(jira_connection, config, story):
+    standardized = get_standardized_versionone_data_for_story(story, config)
     if not standardized['jira_issue']:
         return None
 
@@ -210,8 +201,21 @@ def get_jira_issue_for_v1_issue(
     )
 
 
-def get_versionone_story_by_name(connection, story_number):
-    for type_name, type_data in VERSIONONE_TYPES.items():
+def get_versionone_story_type_dict(config):
+    story_types = config['versionone']['story_types'].split(',')
+    type_dict = {}
+    for story_type in story_types:
+        type_dict[story_type] = {
+            'static': config['versionone_%s_static' % story_type],
+            'fields': config['versionone_%s_fields' % story_type],
+        }
+
+    return type_dict
+
+
+def get_versionone_story_by_name(connection, config, story_number):
+    type_metadata = get_versionone_story_type_dict(config)
+    for type_name, type_data in type_metadata.items():
         field_data = type_data['fields']
         answers = list(
             getattr(connection, type_name).select(
@@ -226,12 +230,13 @@ def get_versionone_story_by_name(connection, story_number):
     raise NotFound('No story found matching %s' % story_number)
 
 
-def get_metadata_for_story_type(story):
-    return VERSIONONE_TYPES[story.__class__.__name__]
+def get_metadata_for_story_type(story, config):
+    type_metadata = get_versionone_story_type_dict(config)
+    return type_metadata[story.__class__.__name__]
 
 
-def get_standardized_versionone_data_for_story(story):
-    type_data = get_metadata_for_story_type(story)
+def get_standardized_versionone_data_for_story(story, config):
+    type_data = get_metadata_for_story_type(story, config)
     data = {}
 
     for standard, custom in type_data['fields'].items():
@@ -243,7 +248,7 @@ def get_standardized_versionone_data_for_story(story):
 
 
 def update_jira_ticket_with_versionone_data(jira, v1, ticket, story, config):
-    standardized = get_standardized_versionone_data_for_story(story)
+    standardized = get_standardized_versionone_data_for_story(story, config)
 
     params = {
         'project': {
@@ -270,7 +275,7 @@ def update_jira_ticket_with_versionone_data(jira, v1, ticket, story, config):
         logger.debug('Created issue %s', ticket)
 
     # Custom fields cannot be set on create!
-    code_review_field_name = get_jira_code_review_field_name(jira)
+    code_review_field_name = get_jira_code_review_field_name(jira, config)
     if code_review_field_name:
         ticket.update(
             **{
@@ -278,7 +283,7 @@ def update_jira_ticket_with_versionone_data(jira, v1, ticket, story, config):
             }
         )
 
-    type_metadata = get_metadata_for_story_type(story)
+    type_metadata = get_metadata_for_story_type(story, config)
     setattr(
         story,
         type_metadata['fields']['jira_issue'],

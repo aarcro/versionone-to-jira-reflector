@@ -5,6 +5,7 @@ import os
 from configobj import ConfigObj
 
 from .main import (
+    ensure_default_settings,
     get_versionone_connection,
     get_jira_connection,
     get_jira_issue_for_v1_issue,
@@ -48,14 +49,20 @@ def main():
     logger.debug(
         "Loading configuration from %s", args.configfile
     )
-    config = ConfigObj(args.configfile)
+    config = ensure_default_settings(
+        ConfigObj(args.configfile)
+    )
 
     v1_connection = get_versionone_connection(config)
     jira_connection = get_jira_connection(config)
 
     for story_number in args.versionone_ids:
-        story = get_versionone_story_by_name(v1_connection, story_number)
-        ticket = get_jira_issue_for_v1_issue(jira_connection, story)
+        story = get_versionone_story_by_name(
+            v1_connection, config, story_number
+        )
+        ticket = get_jira_issue_for_v1_issue(
+            jira_connection, config, story
+        )
 
         update_jira_ticket_with_versionone_data(
             jira_connection,
