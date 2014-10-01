@@ -36,3 +36,12 @@ a JIRA issue to match your the story identifiers you have supplied.
    ``~/.versionone-to-jira-reflector`` should you need to edit it after
    saving.  Passwords will be queried from (and saved to) the system
    keyring.
+
+
+Caveat Emptor
+-------------
+
+Although this is a totally workable solution, this was mostly a quick
+hack to solve a temporary need, and it isn't exactly code that I'm
+proud of.  If you end up using this tool, feel free to submit a pull
+request to clean things up that you think could easily be better.
