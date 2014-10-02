@@ -40,13 +40,21 @@ def main():
         type=str,
         default='INFO'
     )
+    parser.add_argument(
+        '--no-open',
+        default=False,
+        action='store_true',
+        help=(
+            'Do not open created/updated JIRA tickets in your default browser.'
+        )
+    )
     args = parser.parse_args()
 
     # Set up a simple console logger
     logging.basicConfig(level=args.loglevel)
 
     # Get configuration object
-    logger.debug(
+    logger.info(
         "Loading configuration from %s", args.configfile
     )
     config = ensure_default_settings(
@@ -57,6 +65,7 @@ def main():
     jira_connection = get_jira_connection(config)
 
     for story_number in args.versionone_ids:
+        logger.info("Processing story #%s", story_number)
         story = get_versionone_story_by_name(
             v1_connection, config, story_number
         )
@@ -69,7 +78,8 @@ def main():
             v1_connection,
             ticket,
             story,
-            config
+            config,
+            open_url=not args.no_open
         )
 
     # If any configuration values were changed, let's save them

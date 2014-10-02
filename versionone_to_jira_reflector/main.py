@@ -116,7 +116,8 @@ def get_versionone_connection(config):
         address,
         instance,
         username,
-        password
+        password,
+        scheme='https'
     )
     return connection
 
@@ -135,6 +136,15 @@ def get_jira_connection(config):
         domain = input(
             'JIRA Domain '
             '(ex: https://jira.mycompany.com/): '
+        )
+
+    parsed_address = parse.urlparse(domain)
+    if parsed_address.scheme == 'http':
+        logger.warning(
+            "You entered an HTTP URL rather than HTTPS; if you encounter "
+            "problems updating JIRA issues, you may want to edit your "
+            "local configuration file and change the JIRA server settings to "
+            "use HTTPS."
         )
 
     project = config['jira'].get('project')
@@ -247,10 +257,13 @@ def get_standardized_versionone_data_for_story(story, config):
     return data
 
 
-def update_jira_ticket_with_versionone_data(jira, v1, ticket, story, config):
+def update_jira_ticket_with_versionone_data(
+    jira, v1, ticket, story, config,
+    open_url=False,
+):
     standardized = get_standardized_versionone_data_for_story(story, config)
 
-    params = {
+    create_params = {
         'project': {
             'key': config['jira']['project'],
         },
@@ -265,23 +278,22 @@ def update_jira_ticket_with_versionone_data(jira, v1, ticket, story, config):
         }
     }
 
+    # Custom fields cannot be set on create!
+    code_review_field_name = get_jira_code_review_field_name(jira, config)
+    update_params = {
+        code_review_field_name: standardized['code_review_url']
+    }
+
     if ticket:
         logger.debug('Updating issue %s', ticket)
+        params = create_params.copy()
+        params.update(update_params)
         ticket.update(**params)
-        return
     else:
         logger.debug('Creating new issue.')
         ticket = jira.create_issue(**params)
+        ticket.update(**update_params)
         logger.debug('Created issue %s', ticket)
-
-    # Custom fields cannot be set on create!
-    code_review_field_name = get_jira_code_review_field_name(jira, config)
-    if code_review_field_name:
-        ticket.update(
-            **{
-                code_review_field_name: standardized['code_review_url']
-            }
-        )
 
     type_metadata = get_metadata_for_story_type(story, config)
     setattr(
@@ -295,6 +307,7 @@ def update_jira_ticket_with_versionone_data(jira, v1, ticket, story, config):
         'Issue saved: See %s for results.', ticket.permalink()
     )
 
-    webbrowser.open(
-        ticket.permalink()
-    )
+    if open_url:
+        webbrowser.open(
+            ticket.permalink()
+        )
