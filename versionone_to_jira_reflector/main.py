@@ -189,8 +189,7 @@ def get_jira_connection(config):
     )
 
 
-def get_jira_code_review_field_name(jira_connection, config):
-    label = config['jira']['code_review_field_label']
+def get_jira_field_name_by_label(jira_connection, label):
     matching_fields = [
         f['id']
         for f in jira_connection.fields()
@@ -279,7 +278,9 @@ def update_jira_ticket_with_versionone_data(
     }
 
     # Custom fields cannot be set on create!
-    code_review_field_name = get_jira_code_review_field_name(jira, config)
+    code_review_field_name = get_jira_field_name_by_label(
+        jira, config['jira']['code_review_field_label']
+    )
     update_params = {
         code_review_field_name: standardized['code_review_url']
     }
@@ -291,7 +292,7 @@ def update_jira_ticket_with_versionone_data(
         ticket.update(**params)
     else:
         logger.debug('Creating new issue.')
-        ticket = jira.create_issue(**params)
+        ticket = jira.create_issue(**create_params)
         ticket.update(**update_params)
         logger.debug('Created issue %s', ticket)
 
