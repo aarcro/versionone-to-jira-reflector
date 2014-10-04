@@ -211,6 +211,59 @@ def get_jira_issue_for_v1_issue(jira_connection, config, story):
 
 
 def get_versionone_story_type_dict(config):
+    """ Creates a dictionary of Story-type configuration information.
+
+    This dictionary is used for generating standardized story information
+    that we can use in later interactions with JIRA.
+
+    Here's an example (the default at the time of this writing) version
+    one configuration::
+
+        [versionone]
+        story_types = Story,Defect
+
+        [versonone_Story_fields]
+        name = Name
+        number = Number
+        jira_issue = Custom_JIRATicketNumber
+        code_review_url = Custom_UserStoryCodeReview
+        description = Description
+
+        [versionone_Story_static]
+        issue_type = Story
+
+        [versionone_Defect_fields]
+        name = Name
+        number = Number
+        jira_issue = Custom_JiraTicketNumber
+        code_review_url = Custom_DefectCodeReview
+        description = Description
+
+        [versionone_Defect_static]
+        issue_type = Bug
+
+    Let's start with the ``versionone.story_types`` configuration key.
+    This configuration key stores a comma-separated list of story types
+    that will be processable.
+    This key is used for determining what *other* configuration
+    keys to look for, too.
+
+    For each story type, two other configuration sections are expected:
+
+    * ``versionone_STORYTYPE_fields``: Maps the standardized field name
+      (left) with a given field name on the VersionOne object type.  In
+      this example, you'll see that the column storing the jira issue
+      number is named 'Custom_JIRATicketNumber' on Story objects,
+      and named 'Custom_JiraTicketNumber' on Defect objects (note that
+      the API *is* case-sensitive).
+    * ``versionone_STORYTYPE_static``: Sets static keys to be set
+      in the returned standardized story data.  In the above example,
+      you'll see that the standardized information returned from
+      Defects will always have 'issue_type' set to 'Bug', and the
+      standardized information returned from Stories will always have
+      'issue_type' set to 'Story'.
+
+    """
     story_types = config['versionone']['story_types'].split(',')
     type_dict = {}
     for story_type in story_types:
@@ -245,6 +298,24 @@ def get_metadata_for_story_type(story, config):
 
 
 def get_standardized_versionone_data_for_story(story, config):
+    """ Get standardized information for a given story.
+
+    VersionOne field names for various things differ per story type, so
+    for example:
+
+    +------------+--------------------------+----------------------------+
+    | Story Type | JIRA Ticket Number Field | Code Review URL Field      |
+    +============+==========================+============================+
+    | Story      | Custom_JIRATicketNumber  | Custom_UserStoryCodeReview |
+    +------------+--------------------------+----------------------------+
+    | Defect     | Custom_JiraTicketNumber  | Custom_DefectCodeReview    |
+    +------------+--------------------------+----------------------------+
+
+    To minimize how much cruft this adds to other areas of the application,
+    this method will return standardized information for accessing and
+    utilizing these fields.
+
+    """
     type_data = get_metadata_for_story_type(story, config)
     data = {}
 
@@ -296,6 +367,9 @@ def update_jira_ticket_with_versionone_data(
         ticket.update(**update_params)
         logger.debug('Created issue %s', ticket)
 
+    # Update the VersionOne ticket to store the JIRA Ticket number
+    # we just created/updated.  This will ensure that we do not
+    # create a new ticket next time this story is synchronized.
     type_metadata = get_metadata_for_story_type(story, config)
     setattr(
         story,
