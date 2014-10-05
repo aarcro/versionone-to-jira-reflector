@@ -190,6 +190,15 @@ def get_jira_connection(config):
 
 
 def get_jira_field_name_by_label(jira_connection, label):
+    """ Returns the field name using a label assigned to a custom field.
+
+    Custom fields are not stored in JIRA under their label name; this
+    function queries the jira API for the list of fields, searching for
+    one matching the supplied label; upon finding the match, the method
+    returns the actual field name.  If a match is not found, this method
+    returns None.
+
+    """
     matching_fields = [
         f['id']
         for f in jira_connection.fields()
@@ -201,6 +210,7 @@ def get_jira_field_name_by_label(jira_connection, label):
 
 
 def get_jira_issue_for_v1_issue(jira_connection, config, story):
+    """ Returns a JIRA issue matching this story (or None). """
     standardized = get_standardized_versionone_data_for_story(story, config)
     if not standardized['jira_issue']:
         return None
@@ -276,6 +286,15 @@ def get_versionone_story_type_dict(config):
 
 
 def get_versionone_story_by_name(connection, config, story_number):
+    """ Get the VersionOne story object given an identifier.
+
+    VersionOne stories come in a variety of different types (Defects,
+    Stories, and more), and each of those types is handled by a
+    different endpoint.  This method checks each possible endpoint
+    to see if a story matching the supplied identifier exists, and if
+    it does, returns the returned object.
+
+    """
     type_metadata = get_versionone_story_type_dict(config)
     for type_name, type_data in type_metadata.items():
         field_data = type_data['fields']
