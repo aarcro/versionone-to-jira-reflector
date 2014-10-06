@@ -194,8 +194,8 @@ def get_jira_field_name_by_label(jira_connection, label):
 
     Custom fields are not stored in JIRA under their label name; this
     function queries the jira API for the list of fields, searching for
-    one matching the supplied label; upon finding the match, the method
-    returns the actual field name.  If a match is not found, this method
+    one matching the supplied label; upon finding the match, the function
+    returns the actual field name.  If a match is not found, this function
     returns None.
 
     """
@@ -290,7 +290,7 @@ def get_versionone_story_by_name(connection, config, story_number):
 
     VersionOne stories come in a variety of different types (Defects,
     Stories, and more), and each of those types is handled by a
-    different endpoint.  This method checks each possible endpoint
+    different endpoint.  This function checks each possible endpoint
     to see if a story matching the supplied identifier exists, and if
     it does, returns the returned object.
 
@@ -331,7 +331,7 @@ def get_standardized_versionone_data_for_story(story, config):
     +------------+--------------------------+----------------------------+
 
     To minimize how much cruft this adds to other areas of the application,
-    this method will return standardized information for accessing and
+    this function will return standardized information for accessing and
     utilizing these fields.
 
     """
