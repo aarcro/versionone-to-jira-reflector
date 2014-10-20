@@ -352,9 +352,11 @@ def update_jira_ticket_with_versionone_data(
 ):
     standardized = get_standardized_versionone_data_for_story(story, config)
 
+    default_project = config['jira']['project']
+
     create_params = {
         'project': {
-            'key': config['jira']['project'],
+            'key': default_project,
         },
         'summary': '[%s] %s' % (
             standardized['number'],
@@ -381,6 +383,9 @@ def update_jira_ticket_with_versionone_data(
         params.update(update_params)
         ticket.update(**params)
     else:
+        project = input('JIRA project [' + default_project + ']: ')
+        if project:
+            create_params['project']['key'] = project
         logger.debug('Creating new issue.')
         ticket = jira.create_issue(**create_params)
         ticket.update(**update_params)
