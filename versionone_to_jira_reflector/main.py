@@ -380,10 +380,11 @@ def update_jira_ticket_with_versionone_data(
     else:
         default_project = config['jira']['project']
         project = input('JIRA project [' + default_project + ']: ')
-        if project:
-            base_params['project'] = {
-                'key': project
-            }
+        if not project:
+            project = default_project
+        base_params['project'] = {
+            'key': project
+        }
         logger.debug('Creating new issue.')
         ticket = jira.create_issue(**base_params)
         ticket.update(**update_params)
