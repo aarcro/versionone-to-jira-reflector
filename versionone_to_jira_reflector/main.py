@@ -57,6 +57,27 @@ def ensure_default_settings(config):
     return config
 
 
+def reset_saved_passwords(config):
+    try:
+        keyring.delete_password(
+            'versionone_to_jira_reflector',
+            'versionone'
+        )
+    except keyring.errors.PasswordDeleteError:
+        logger.warning(
+            "Unable to delete VersionOne password.  Was one saved?"
+        )
+    try:
+        keyring.delete_password(
+            'versionone_to_jira_reflector',
+            'jira'
+        )
+    except keyring.errors.PasswordDeleteError:
+        logger.warning(
+            "Unable to delete JIRA password.  Was one saved?"
+        )
+
+
 def get_versionone_connection(config):
     settings_saved = True
 

@@ -10,7 +10,8 @@ from .main import (
     get_jira_connection,
     get_jira_issue_for_v1_issue,
     get_versionone_story_by_name,
-    update_jira_ticket_with_versionone_data
+    update_jira_ticket_with_versionone_data,
+    reset_saved_passwords
 )
 
 
@@ -33,6 +34,14 @@ def main():
         type=str,
         default=os.path.expanduser(
             '~/.versionone-to-jira-reflector',
+        )
+    )
+    parser.add_argument(
+        '--reset-saved-passwords',
+        default=False,
+        action='store_true',
+        help=(
+            'Reset saved passwords.'
         )
     )
     parser.add_argument(
@@ -60,6 +69,9 @@ def main():
     config = ensure_default_settings(
         ConfigObj(args.configfile)
     )
+
+    if args.reset_saved_passwords:
+        reset_saved_passwords(config)
 
     v1_connection = get_versionone_connection(config)
     jira_connection = get_jira_connection(config)
