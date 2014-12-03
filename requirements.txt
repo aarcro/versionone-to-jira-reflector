@@ -5,4 +5,4 @@ v1pysdk-unofficial==0.4.post1
 jira>=0.32
 keyring>=4.0
 html2text>=2014.9.25
-verlib=0.1
+verlib==0.1
