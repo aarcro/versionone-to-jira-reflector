@@ -8,12 +8,14 @@ import keyring
 from six.moves import input
 from six.moves.urllib import parse
 from v1pysdk import V1Meta
+from verlib import NormalizedVersion
 
 from .exceptions import (
     ConfigurationError,
     NotFound,
 )
 from .util import response_was_yes
+from . import __version__
 
 
 DEFAULT_SETTINGS = {
@@ -23,7 +25,7 @@ DEFAULT_SETTINGS = {
     'versionone_Story_fields': {
         'name': 'Name',
         'number': 'Number',
-        'jira_issue': 'Custom_JIRATicketNumber',
+        'jira_issue': 'Custom_JiraTicketNumber2',
         'code_review_url': 'Custom_UserStoryCodeReview',
         'description': 'Description',
     },
@@ -50,10 +52,20 @@ logger = logging.getLogger(__name__)
 
 
 def ensure_default_settings(config):
-    for setting_key, values in DEFAULT_SETTINGS.items():
-        if setting_key not in config:
-            config[setting_key] = values
+    version = NormalizedVersion(__version__)
+    if 'version' in config:
+        config_version = NormalizedVersion(config['version'])
+    else:
+        config_version = NormalizedVersion('0.1')
 
+    for section, values in DEFAULT_SETTINGS.items():
+        if section not in config:
+            config[section] = {}
+        for key, value in values.items():
+            if key not in config[section] or version > config_version:
+                config[section][key] = value
+
+    config['version'] = __version__
     return config
 
 
