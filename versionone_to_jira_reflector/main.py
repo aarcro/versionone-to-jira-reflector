@@ -431,14 +431,18 @@ def update_jira_ticket_with_versionone_data(
     #       above), create it.
     jira_links = {}
     for link in jira.remote_links(ticket):
-        jira_links[link.object.url] = link.object.title
+        jira_links[link.object.title] = link
+        # link.object.url
 
     for link in story.Links:
-        if link.URL in jira_links and link.Name != jira_links[link.URL]:
-            jira_links[link.URL].delete()
-            del jira_links[link.URL]
+        if (
+            link.Name in jira_links
+            and link.URL != jira_links[link.Name].object.url
+        ):
+            jira_links[link.Name].delete()
+            del jira_links[link.Name]
         # Do *not* make into an elif -- we might have deleted it above
-        if link.URL not in jira_links:
+        if link.Name not in jira_links:
             jira.add_remote_link(
                 issue=ticket,
                 destination={
