@@ -2,7 +2,6 @@ import getpass
 import logging
 import webbrowser
 
-from jira.client import JIRA
 from html2text import html2text
 import keyring
 from six.moves import input
@@ -14,6 +13,7 @@ from .exceptions import (
     ConfigurationError,
     NotFound,
 )
+from .jira_client import JIRA
 from .util import response_was_yes
 from . import __version__
 
@@ -422,6 +422,30 @@ def update_jira_ticket_with_versionone_data(
         ticket = jira.create_issue(**base_params)
         ticket.update(**update_params)
         logger.debug('Created issue %s', ticket)
+
+    # Update links
+    # 1. Fetch links from JIRA
+    # 2. Loop through links from V1
+    #    a. If the link exists, but does not match -- delete it.
+    #    b. If the link does not exist (including if we deleted it
+    #       above), create it.
+    jira_links = {}
+    for link in jira.remote_links(ticket):
+        jira_links[link.object.url] = link.object.title
+
+    for link in story.Links:
+        if link.URL in jira_links and link.Name != jira_links[link.URL]:
+            jira_links[link.URL].delete()
+            del jira_links[link.URL]
+        # Do *not* make into an elif -- we might have deleted it above
+        if link.URL not in jira_links:
+            jira.add_remote_link(
+                issue=ticket,
+                destination={
+                    'url': link.URL,
+                    'title': link.Name,
+                }
+            )
 
     # Update the VersionOne ticket to store the JIRA Ticket number
     # we just created/updated.  This will ensure that we do not
