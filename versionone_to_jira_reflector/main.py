@@ -46,6 +46,7 @@ DEFAULT_SETTINGS = {
         'code_review_field_label': 'Code Review Url',
     },
 }
+BACKREFERENCE_NAME = 'VersionOne Story'
 
 
 logger = logging.getLogger(__name__)
@@ -456,6 +457,15 @@ def update_jira_ticket_with_versionone_data(
                     'title': link.Name,
                 }
             )
+
+    if BACKREFERENCE_NAME not in jira_links:
+        jira.add_remote_link(
+            issue=ticket,
+            destination={
+                'url': story.url,
+                'title': BACKREFERENCE_NAME
+            },
+        )
 
     # Update the VersionOne ticket to store the JIRA Ticket number
     # we just created/updated.  This will ensure that we do not
