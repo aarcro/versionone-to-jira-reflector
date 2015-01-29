@@ -391,10 +391,6 @@ def update_jira_ticket_with_versionone_data(
             standardized['name'],
         ),
         'description': html2text(standardized['description']),
-        'issuetype': {'name': standardized['issue_type']},
-        'assignee': {
-            'name': config['jira']['username']
-        }
     }
 
     # Custom fields cannot be set on create!
@@ -411,6 +407,15 @@ def update_jira_ticket_with_versionone_data(
         params.update(update_params)
         ticket.update(**params)
     else:
+        # Only set issue type, assignee when issue is being created
+        base_params.update({
+            'issuetype':  {
+                'name': standardized['issue_type'],
+            },
+            'assignee': {
+                'name': config['jira']['username']
+            }
+        })
         default_project = config['jira']['project']
         project = input('JIRA project [' + default_project + ']: ')
         if not project:
@@ -418,6 +423,7 @@ def update_jira_ticket_with_versionone_data(
         base_params['project'] = {
             'key': project
         }
+
         logger.debug('Creating new issue.')
         ticket = jira.create_issue(**base_params)
         ticket.update(**update_params)
