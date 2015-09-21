@@ -44,6 +44,7 @@ DEFAULT_SETTINGS = {
     },
     'jira': {
         'code_review_field_label': 'Code Review Url',
+        'feature_branch_field_label': 'Feature Branch',
     },
 }
 BACKREFERENCE_NAME = 'VersionOne Story'
@@ -401,8 +402,12 @@ def update_jira_ticket_with_versionone_data(
     code_review_field_name = get_jira_field_name_by_label(
         jira, config['jira']['code_review_field_label']
     )
+    feature_branch_field_name = get_jira_field_name_by_label(
+        jira, config['jira']['feature_branch_field_label']
+    )
     update_params = {
-        code_review_field_name: standardized['code_review_url']
+        code_review_field_name: standardized['code_review_url'],
+        feature_branch_field_name: standardized['number']
     }
 
     if ticket:
