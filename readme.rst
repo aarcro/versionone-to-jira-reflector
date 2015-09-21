@@ -35,7 +35,7 @@ Basic use:
 
 The app will proceed to ask you for connection information if such
 details have not previously been saved, and will create or update
-a JIRA issue to match your the story identifiers you have supplied.
+a JIRA issue to match your V1 story with the story identifiers you have supplied.
 
 .. note::
 
