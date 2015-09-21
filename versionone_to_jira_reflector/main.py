@@ -266,7 +266,7 @@ def get_versionone_story_type_dict(config):
         [versionone]
         story_types = Story,Defect
 
-        [versonone_Story_fields]
+        [versionone_Story_fields]
         name = Name
         number = Number
         jira_issue = Custom_JIRATicketNumber
