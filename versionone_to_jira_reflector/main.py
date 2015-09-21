@@ -385,13 +385,16 @@ def update_jira_ticket_with_versionone_data(
     open_url=False,
 ):
     standardized = get_standardized_versionone_data_for_story(story, config)
+    html_description = 'No description provided'
+    if standardized['description']:
+        html_description = html2text(standardized['description'])
 
     base_params = {
         'summary': '[%s] %s' % (
             standardized['number'],
             standardized['name'],
         ),
-        'description': html2text(standardized['description']),
+        'description': html_description,
     }
 
     # Custom fields cannot be set on create!
