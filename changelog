@@ -1,0 +1,7 @@
+0.5.4 Sep 21, 2015
+	- add ability to set the feature branch from the V1 story number
+
+0.5.3 Sep 21, 2015
+	- Add handling for blank description fields
+		(default: No description provided)
+
