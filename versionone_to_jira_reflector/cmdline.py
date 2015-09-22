@@ -30,6 +30,16 @@ def main():
         )
     )
     parser.add_argument(
+        '--label',
+        dest='labels',
+        type=str,
+        nargs='+',
+        default=argparse.SUPPRESS,
+        help=(
+            'Optional label(s) to be added to the created/updated JIRA tickets.'
+        )
+    )
+    parser.add_argument(
         '--configfile',
         type=str,
         default=os.path.expanduser(
@@ -99,6 +109,7 @@ def main():
             ticket,
             story,
             config,
+            args.labels if 'labels' in args else None,
             open_url=not args.no_open
         )
 
