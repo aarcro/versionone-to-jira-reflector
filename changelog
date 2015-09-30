@@ -1,5 +1,8 @@
-0.5.5 Sep 21, 2015
-	- Update all dependencies to latest releases
+0.5.6 Sep 30, 2015
+	- added --label command line option to add optional labels to JIRA story
+
+0.5.5 Sep 22, 2015
+	- Updated all dependencies to latest versions
 
 0.5.4 Sep 21, 2015
 	- add ability to set the feature branch from the V1 story number

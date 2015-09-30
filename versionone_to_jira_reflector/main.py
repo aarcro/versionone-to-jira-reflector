@@ -9,10 +9,7 @@ from six.moves.urllib import parse
 from v1pysdk import V1Meta
 from verlib import NormalizedVersion
 
-from .exceptions import (
-    ConfigurationError,
-    NotFound,
-)
+from .exceptions import ConfigurationError, NotFound
 from .jira_client import JIRA
 from .util import response_was_yes
 from . import __version__
@@ -30,7 +27,7 @@ DEFAULT_SETTINGS = {
         'description': 'Description',
     },
     'versionone_Story_static': {
-        'issue_type': 'Story'
+        'issue_type': 'User Story'
     },
     'versionone_Defect_fields': {
         'name': 'Name',
@@ -40,11 +37,12 @@ DEFAULT_SETTINGS = {
         'description': 'Description',
     },
     'versionone_Defect_static': {
-        'issue_type': 'Bug',
+        'issue_type': 'Defect',
     },
     'jira': {
         'code_review_field_label': 'Code Review Url',
         'feature_branch_field_label': 'Feature Branch',
+        'labels_field_label': 'Labels',
     },
 }
 BACKREFERENCE_NAME = 'VersionOne Story'
@@ -275,7 +273,7 @@ def get_versionone_story_type_dict(config):
         description = Description
 
         [versionone_Story_static]
-        issue_type = Story
+        issue_type = User Story
 
         [versionone_Defect_fields]
         name = Name
@@ -285,7 +283,7 @@ def get_versionone_story_type_dict(config):
         description = Description
 
         [versionone_Defect_static]
-        issue_type = Bug
+        issue_type = Defect
 
     Let's start with the ``versionone.story_types`` configuration key.
     This configuration key stores a comma-separated list of story types
@@ -304,9 +302,9 @@ def get_versionone_story_type_dict(config):
     * ``versionone_STORYTYPE_static``: Sets static keys to be set
       in the returned standardized story data.  In the above example,
       you'll see that the standardized information returned from
-      Defects will always have 'issue_type' set to 'Bug', and the
+      Defects will always have 'issue_type' set to 'Defect', and the
       standardized information returned from Stories will always have
-      'issue_type' set to 'Story'.
+      'issue_type' set to 'User Story'.
 
     """
     story_types = config['versionone']['story_types'].split(',')
@@ -360,7 +358,7 @@ def get_standardized_versionone_data_for_story(story, config):
     +------------+--------------------------+----------------------------+
     | Story Type | JIRA Ticket Number Field | Code Review URL Field      |
     +============+==========================+============================+
-    | Story      | Custom_JIRATicketNumber  | Custom_UserStoryCodeReview |
+    | User Story | Custom_JIRATicketNumber  | Custom_UserStoryCodeReview |
     +------------+--------------------------+----------------------------+
     | Defect     | Custom_JiraTicketNumber  | Custom_DefectCodeReview    |
     +------------+--------------------------+----------------------------+
@@ -382,7 +380,7 @@ def get_standardized_versionone_data_for_story(story, config):
 
 
 def update_jira_ticket_with_versionone_data(
-    jira, v1, ticket, story, config,
+    jira, v1, ticket, story, config, labels,
     open_url=False,
 ):
     standardized = get_standardized_versionone_data_for_story(story, config)
@@ -405,10 +403,15 @@ def update_jira_ticket_with_versionone_data(
     feature_branch_field_name = get_jira_field_name_by_label(
         jira, config['jira']['feature_branch_field_label']
     )
+    labels_field_name = get_jira_field_name_by_label(
+        jira, config['jira']['labels_field_label']
+    )
     update_params = {
         code_review_field_name: standardized['code_review_url'],
-        feature_branch_field_name: standardized['number']
+        feature_branch_field_name: standardized['number'],
     }
+    if labels:
+        update_params['fields'] = {labels_field_name: labels}
 
     if ticket:
         logger.debug('Updating issue %s', ticket)
