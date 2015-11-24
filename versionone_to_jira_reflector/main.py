@@ -92,6 +92,7 @@ def reset_saved_passwords(config):
 
 def get_versionone_connection(config):
     settings_saved = True
+    v1_use_token = config['versionone'].get('auth_type') == 'token',
 
     username = config['versionone'].get('username')
     if not username:
@@ -117,7 +118,12 @@ def get_versionone_connection(config):
         'versionone',
     )
     if not password:
-        password = getpass.getpass('VersionOne Password: ')
+        if v1_use_token:
+            password = getpass.getpass(
+                'VersionOne Token (Click your picture -> Applictions to '
+                'generate a personal access token called v1tojira): ')
+        else:
+            password = getpass.getpass('VersionOne Password: ')
         save = input('Save VersionOne password to system keychain? (N/y): ')
         if response_was_yes(save):
             keyring.set_password(
@@ -150,7 +156,8 @@ def get_versionone_connection(config):
         instance,
         username,
         password,
-        scheme='https'
+        scheme='https',
+        use_password_as_token=config['versionone'].get('auth_type') == 'token',
     )
     return connection
 
