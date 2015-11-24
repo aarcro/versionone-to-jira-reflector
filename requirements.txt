@@ -1,8 +1,8 @@
 six==1.9.0
 configobj==5.0.6
 argparse==1.4.0
-v1pysdk-unofficial==0.4.post2
-jira==0.50
+v1pysdk-unofficial==0.4.post3
+jira==1.0.3
 keyring==5.4
 html2text==2015.6.21
 verlib==0.1
